@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import s from './ImageGallery.module.css';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
@@ -12,11 +12,14 @@ function ImageGallery({ imageName, toggleModal }) {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
   const [loadMoreBtn, setLoadMoreBtn] = useState(false);
+  const oldPage = useRef(null);
 
   useEffect(() => {
+    if (imageName === '') {
+      return;
+    }
     setPage(1);
     setStatus('pending');
-    setImages([]);
 
     fetchImages(imageName, 1)
       .then(images => {
@@ -31,84 +34,42 @@ function ImageGallery({ imageName, toggleModal }) {
   }, [imageName]);
 
   useEffect(() => {
-    setStatus('pending');
+    if (imageName === '') {
+      return;
+    }
 
-    fetchImages(imageName, page)
-      .then(images => {
-        showBtn(images);
-        setImages(() => images);
-        setStatus('resolved');
-      })
-      .catch(error => {
-        setError(error);
-        setStatus('rejected');
-      });
+    if (oldPage.current < page) {
+      setStatus('pending');
+
+      fetchImages(imageName, page)
+        .then(images => {
+          showBtn(images);
+          setImages(prevImages => [...prevImages, ...images]);
+          setStatus('resolved');
+        })
+        .then(() => {
+          return window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth',
+          });
+        })
+        .catch(error => {
+          setError(error);
+          setStatus('rejected');
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
-
-  //     this.setState({ status: 'pending' });
-
-  //     fetchImages(nextImageName, this.state.page)
-  //       .then(images => {
-  //         this.showBtn(images);
-  //         this.setState(prevState => {
-  //           return {
-  //             images: [...prevState.images, ...images],
-  //             status: 'resolved',
-  //           };
-  //         });
-  //       })
-  //       .then(() => {
-  //         return window.scrollTo({
-  //           top: document.documentElement.scrollHeight,
-  //           behavior: 'smooth',
-  //         });
-  //       })
-  //       .catch(error => this.setState({ error, status: 'rejected' }));
-
-  // componentDidUpdate(prevProps, prevState) {
-  //   const prevImageName = prevProps.imageName;
-  //   const nextImageName = this.props.imageName;
-
-  // if (prevImageName !== nextImageName) {
-  //   this.setState({ page: 1, status: 'pending', images: [] });
-
-  //   fetchImages(nextImageName, 1)
-  //     .then(images => {
-  //       this.showBtn(images);
-  //       this.setState({ images, status: 'resolved' });
-  //     })
-  //     .catch(error => this.setState({ error, status: 'rejected' }));
-  // }
-
-  //   if (prevState.page < this.state.page) {
-  //     this.setState({ status: 'pending' });
-
-  //     fetchImages(nextImageName, this.state.page)
-  //       .then(images => {
-  //         this.showBtn(images);
-  //         this.setState(prevState => {
-  //           return {
-  //             images: [...prevState.images, ...images],
-  //             status: 'resolved',
-  //           };
-  //         });
-  //       })
-  //       .then(() => {
-  //         return window.scrollTo({
-  //           top: document.documentElement.scrollHeight,
-  //           behavior: 'smooth',
-  //         });
-  //       })
-  //       .catch(error => this.setState({ error, status: 'rejected' }));
-  //   }
-  // }
 
   const showBtn = images => {
     images.length < 12 ? setLoadMoreBtn(false) : setLoadMoreBtn(true);
   };
 
   const onLoadMore = () => {
-    setPage(prevPage => prevPage + 1);
+    setPage(prevPage => {
+      oldPage.current = prevPage;
+      return prevPage + 1;
+    });
   };
 
   // const { images, error, status, loadMoreBtn } = this.state;
@@ -138,7 +99,7 @@ function ImageGallery({ imageName, toggleModal }) {
             />
           ))}
         </ul>
-        {loadMoreBtn && <Button onLoadMore={this.onLoadMore} />}
+        {loadMoreBtn && <Button onLoadMore={onLoadMore} />}
       </>
     );
   }
