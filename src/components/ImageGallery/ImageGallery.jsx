@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 import s from './ImageGallery.module.css';
 import ImageGalleryItem from '../ImageGalleryItem/ImageGalleryItem';
@@ -12,12 +12,12 @@ function ImageGallery({ imageName, toggleModal }) {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState(null);
   const [loadMoreBtn, setLoadMoreBtn] = useState(false);
-  const oldPage = useRef(null);
 
   useEffect(() => {
     if (imageName === '') {
       return;
     }
+
     setPage(1);
     setStatus('pending');
 
@@ -38,7 +38,7 @@ function ImageGallery({ imageName, toggleModal }) {
       return;
     }
 
-    if (oldPage.current < page) {
+    if (page > 1) {
       setStatus('pending');
 
       fetchImages(imageName, page)
@@ -66,10 +66,7 @@ function ImageGallery({ imageName, toggleModal }) {
   };
 
   const onLoadMore = () => {
-    setPage(prevPage => {
-      oldPage.current = prevPage;
-      return prevPage + 1;
-    });
+    setPage(prevPage => prevPage + 1);
   };
 
   // const { images, error, status, loadMoreBtn } = this.state;
