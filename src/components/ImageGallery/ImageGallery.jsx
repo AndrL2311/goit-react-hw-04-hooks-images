@@ -20,9 +20,9 @@ class ImageGallery extends React.Component {
     const nextImageName = this.props.imageName;
 
     if (prevImageName !== nextImageName) {
-      this.setState({ status: 'pending', page: 1, images: [] });
+      this.setState({ page: 1, status: 'pending', images: [] });
 
-      fetchImages(nextImageName, this.state.page)
+      fetchImages(nextImageName, 1)
         .then(images => {
           this.showBtn(images);
           this.setState({ images, status: 'resolved' });
@@ -30,7 +30,7 @@ class ImageGallery extends React.Component {
         .catch(error => this.setState({ error, status: 'rejected' }));
     }
 
-    if (prevState.page !== this.state.page) {
+    if (prevState.page < this.state.page) {
       this.setState({ status: 'pending' });
 
       fetchImages(nextImageName, this.state.page)
