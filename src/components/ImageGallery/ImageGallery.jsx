@@ -69,8 +69,6 @@ function ImageGallery({ imageName, toggleModal }) {
     setPage(prevPage => prevPage + 1);
   };
 
-  // const { images, error, status, loadMoreBtn } = this.state;
-
   if (status === 'idle') {
     return <div className={s.text}>Enter image name.</div>;
   }
